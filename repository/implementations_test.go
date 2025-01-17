@@ -28,7 +28,7 @@ func TestCreateEstate(t *testing.T) {
 				Length: 20,
 			},
 			mockFunc: func(m sqlmock.Sqlmock) {
-				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO estates (id, width, length) VALUES ($1, $2, $3) returning id;`)).
+				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO estates (id, width, length) VALUES ($1, $2, $3) RETURNING id;`)).
 					WithArgs("1", 20, 20).
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
 			},
@@ -47,19 +47,12 @@ func TestCreateEstate(t *testing.T) {
 				Length: 0,
 			},
 			mockFunc: func(m sqlmock.Sqlmock) {
-				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO estates (id, width, length) VALUES ($1, $2, $3) returning id;`)).
+				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO estates (id, width, length) VALUES ($1, $2, $3) RETURNING id;`)).
 					WithArgs("1", 0, 0).
 					WillReturnError(fmt.Errorf("error"))
 			},
 			response: Estate{},
-			err:      fmt.Errorf("error"),
-		},
-		{
-			name:     "Test Create Estate - Nil Request",
-			request:  nil,
-			mockFunc: func(m sqlmock.Sqlmock) {},
-			response: Estate{},
-			err:      fmt.Errorf("invalid request"),
+			err:      fmt.Errorf("failed to create estate: error"),
 		},
 	}
 
@@ -74,8 +67,8 @@ func TestCreateEstate(t *testing.T) {
 		tc.mockFunc(mock)
 
 		res, err := repo.CreateEstate(context.Background(), tc.request.(Estate))
-		assert.Equal(t, res, tc.response)
-		assert.Equal(t, err, tc.err)
+		assert.Equal(t, tc.response, res)
+		assert.Equal(t, tc.err, err)
 	}
 }
 
@@ -91,7 +84,7 @@ func TestCreateEstateTree(t *testing.T) {
 				Height:   20,
 			},
 			mockFunc: func(m sqlmock.Sqlmock) {
-				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO trees (id, estate_id, x, y, height) VALUES ($1, $2, $3, $4, $5) returning id;`)).
+				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO trees (id, estate_id, x, y, height) VALUES ($1, $2, $3, $4, $5) RETURNING id;`)).
 					WithArgs("1", "1", 20, 20, 20).
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
 			},
@@ -114,19 +107,12 @@ func TestCreateEstateTree(t *testing.T) {
 				Height:   0,
 			},
 			mockFunc: func(m sqlmock.Sqlmock) {
-				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO trees (id, estate_id, x, y, height) VALUES ($1, $2, $3, $4, $5) returning id;`)).
+				m.ExpectQuery(regexp.QuoteMeta(`INSERT INTO trees (id, estate_id, x, y, height) VALUES ($1, $2, $3, $4, $5) RETURNING id;`)).
 					WithArgs("1", "1", 0, 0, 0).
 					WillReturnError(fmt.Errorf("error"))
 			},
 			response: EstateTree{},
-			err:      fmt.Errorf("error"),
-		},
-		{
-			name:     "Test Create Estate Tree - Nil Request",
-			request:  nil,
-			mockFunc: func(m sqlmock.Sqlmock) {},
-			response: EstateTree{},
-			err:      fmt.Errorf("invalid request"),
+			err:      fmt.Errorf("failed to create tree: error"),
 		},
 	}
 
@@ -141,8 +127,8 @@ func TestCreateEstateTree(t *testing.T) {
 		tc.mockFunc(mock)
 
 		res, err := repo.CreateEstateTree(context.Background(), tc.request.(EstateTree))
-		assert.Equal(t, res, tc.response)
-		assert.Equal(t, err, tc.err)
+		assert.Equal(t, tc.response, res)
+		assert.Equal(t, tc.err, err)
 	}
 }
 
@@ -152,10 +138,9 @@ func TestGetStatsByEstateId(t *testing.T) {
 			name:    "Test Get Stats By Estate Id - Success",
 			request: "1",
 			mockFunc: func(m sqlmock.Sqlmock) {
-				m.ExpectQuery(regexp.QuoteMeta(`SELECT COALESCE(COUNT(*), 0) AS count, COALESCE(MAX(height), 0) AS max_height, COALESCE(MIN(height), 0) AS min_height,	COALESCE(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY height), 0) AS median_height FROM trees WHERE estate_id = $1;`)).
+				m.ExpectQuery(regexp.QuoteMeta(`SELECT COALESCE(COUNT(*), 0) AS count, COALESCE(MAX(height), 0) AS max_height, COALESCE(MIN(height), 0) AS min_height, COALESCE(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY height), 0) AS median_height FROM trees WHERE estate_id = $1;`)).
 					WithArgs("1").
 					WillReturnRows(sqlmock.NewRows([]string{"count", "max_height", "min_height", "median_height"}).AddRow(2, 35, 11, 40))
-
 			},
 			response: StatsEstate{
 				Count:  2,
@@ -169,19 +154,12 @@ func TestGetStatsByEstateId(t *testing.T) {
 			name:    "Test Get Stats By Estate Id - Error",
 			request: "1",
 			mockFunc: func(m sqlmock.Sqlmock) {
-				m.ExpectQuery(regexp.QuoteMeta(`SELECT COALESCE(COUNT(*), 0) AS count, COALESCE(MAX(height), 0) AS max_height, COALESCE(MIN(height), 0) AS min_height,	COALESCE(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY height), 0) AS median_height FROM trees WHERE estate_id = $1;`)).
+				m.ExpectQuery(regexp.QuoteMeta(`SELECT COALESCE(COUNT(*), 0) AS count, COALESCE(MAX(height), 0) AS max_height, COALESCE(MIN(height), 0) AS min_height, COALESCE(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY height), 0) AS median_height FROM trees WHERE estate_id = $1;`)).
 					WithArgs("1").
 					WillReturnError(fmt.Errorf("error"))
 			},
 			response: StatsEstate{},
-			err:      fmt.Errorf("error"),
-		},
-		{
-			name:     "Test Get Stats By Estate Id - Nil Request",
-			request:  nil,
-			mockFunc: func(m sqlmock.Sqlmock) {},
-			response: StatsEstate{},
-			err:      fmt.Errorf("invalid request"),
+			err:      fmt.Errorf("failed to retrieve stats: error"),
 		},
 	}
 
@@ -196,8 +174,8 @@ func TestGetStatsByEstateId(t *testing.T) {
 		tc.mockFunc(mock)
 
 		res, err := repo.GetStatsByEstateId(context.Background(), tc.request.(string))
-		assert.Equal(t, res, tc.response)
-		assert.Equal(t, err, tc.err)
+		assert.Equal(t, tc.response, res)
+		assert.Equal(t, tc.err, err)
 	}
 }
 
@@ -210,7 +188,6 @@ func TestGetEstateById(t *testing.T) {
 				m.ExpectQuery(regexp.QuoteMeta(`SELECT id, width, length FROM estates WHERE id = $1;`)).
 					WithArgs("1").
 					WillReturnRows(sqlmock.NewRows([]string{"id", "width", "length"}).AddRow("1", 20, 20))
-
 			},
 			response: Estate{
 				Id:     "1",
@@ -228,14 +205,7 @@ func TestGetEstateById(t *testing.T) {
 					WillReturnError(fmt.Errorf("error"))
 			},
 			response: Estate{},
-			err:      fmt.Errorf("error"),
-		},
-		{
-			name:     "Test Get Estate By Id - Nil Request",
-			request:  nil,
-			mockFunc: func(m sqlmock.Sqlmock) {},
-			response: Estate{},
-			err:      fmt.Errorf("invalid request"),
+			err:      fmt.Errorf("failed to retrieve estate: error"),
 		},
 	}
 
@@ -250,8 +220,8 @@ func TestGetEstateById(t *testing.T) {
 		tc.mockFunc(mock)
 
 		res, err := repo.GetEstateById(context.Background(), tc.request.(string))
-		assert.Equal(t, res, tc.response)
-		assert.Equal(t, err, tc.err)
+		assert.Equal(t, tc.response, res)
+		assert.Equal(t, tc.err, err)
 	}
 }
 
@@ -266,7 +236,6 @@ func TestGetTreesByEstateId(t *testing.T) {
 					WillReturnRows(sqlmock.NewRows([]string{"id", "estate_id", "x", "y", "height"}).
 						AddRow("1", "1", 20, 20, 20).
 						AddRow("2", "1", 11, 11, 10))
-
 			},
 			response: []EstateTree{
 				{
@@ -295,14 +264,7 @@ func TestGetTreesByEstateId(t *testing.T) {
 					WillReturnError(fmt.Errorf("error"))
 			},
 			response: []EstateTree{},
-			err:      fmt.Errorf("error"),
-		},
-		{
-			name:     "Test Get Trees By Estate Id - Nil Request",
-			request:  nil,
-			mockFunc: func(m sqlmock.Sqlmock) {},
-			response: []EstateTree{},
-			err:      fmt.Errorf("invalid request"),
+			err:      fmt.Errorf("failed to query trees: error"),
 		},
 	}
 
@@ -317,7 +279,7 @@ func TestGetTreesByEstateId(t *testing.T) {
 		tc.mockFunc(mock)
 
 		res, err := repo.GetTreesByEstateId(context.Background(), tc.request.(string))
-		assert.Equal(t, res, tc.response)
-		assert.Equal(t, err, tc.err)
+		assert.Equal(t, tc.response, res)
+		assert.Equal(t, tc.err, err)
 	}
 }

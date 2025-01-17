@@ -25,11 +25,17 @@ func main() {
 
 	// Serve Swagger JSON
 	e.GET("/swagger.json", func(c echo.Context) error {
-		spec, err := generated.GetSwagger()
+		swagger, err := generated.GetSwagger()
 		if err != nil {
-			return c.String(http.StatusInternalServerError, "Error loading swagger spec")
+			return c.String(http.StatusInternalServerError, "Error loading Swagger spec")
 		}
-		return c.JSON(http.StatusOK, spec)
+
+		// Serialize Swagger spec to JSON
+		jsonBytes, err := swagger.MarshalJSON()
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "Failed to serialize Swagger spec")
+		}
+		return c.JSONBlob(http.StatusOK, jsonBytes)
 	})
 
 	// Serve Swagger UI
@@ -67,6 +73,7 @@ func main() {
 
 	// Middleware
 	e.Use(middleware.Logger())
+	e.Use(middleware.Recover()) // Recover middleware for better error handling
 
 	// Start server
 	e.Logger.Fatal(e.Start(port))
