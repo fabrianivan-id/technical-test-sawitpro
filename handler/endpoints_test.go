@@ -70,13 +70,7 @@ func TestCreateEstate(t *testing.T) {
 			request: args{
 				payload: `{ "length": 90, "width": 1000000000000000 }`,
 			},
-			mockFunc: func() {
-				mockRepo.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{
-					Id:     "1",
-					Width:  1000000000000000,
-					Length: 90,
-				}, nil)
-			},
+			mockFunc:   func() {},
 			statusCode: http.StatusBadRequest,
 		},
 		{
@@ -84,13 +78,7 @@ func TestCreateEstate(t *testing.T) {
 			request: args{
 				payload: `{ "length": 1000000000000000, "width": 10 }`,
 			},
-			mockFunc: func() {
-				mockRepo.EXPECT().CreateEstate(gomock.Any(), gomock.Any()).Return(repository.Estate{
-					Id:     "1",
-					Width:  90,
-					Length: 1000000000000000,
-				}, nil)
-			},
+			mockFunc:   func() {},
 			statusCode: http.StatusBadRequest,
 		},
 	}
@@ -142,15 +130,7 @@ func TestCreateEstateIdTree(t *testing.T) {
 			request: args{
 				payload: `{ "x": -2, "y": 20, "height": 20 }`,
 			},
-			mockFunc: func() {
-				mockRepo.EXPECT().CreateEstateTree(gomock.Any(), gomock.Any()).Return(repository.EstateTree{
-					Id:       "1",
-					EstateId: "uuid-1",
-					X:        -2,
-					Y:        20,
-					Height:   20,
-				}, errors.New("error x out of range"))
-			},
+			mockFunc:   func() {},
 			statusCode: http.StatusBadRequest,
 		},
 		{
@@ -159,32 +139,16 @@ func TestCreateEstateIdTree(t *testing.T) {
 			request: args{
 				payload: `{ "x": 20, "y": -30, "height": 20 }`,
 			},
-			mockFunc: func() {
-				mockRepo.EXPECT().CreateEstateTree(gomock.Any(), gomock.Any()).Return(repository.EstateTree{
-					Id:       "1",
-					EstateId: "uuid-1",
-					X:        20,
-					Y:        -30,
-					Height:   20,
-				}, errors.New("error y out of range"))
-			},
+			mockFunc:   func() {},
 			statusCode: http.StatusBadRequest,
 		},
 		{
-			name:   "CreateEstateIdTree_Error_Length_Out_Off_Range",
+			name:   "CreateEstateIdTree_Error_Height_Out_Off_Range",
 			pathId: "uuid-1",
 			request: args{
 				payload: `{ "x": 10, "y": 10, "height": 40 }`,
 			},
-			mockFunc: func() {
-				mockRepo.EXPECT().CreateEstateTree(gomock.Any(), gomock.Any()).Return(repository.EstateTree{
-					Id:       "1",
-					EstateId: "uuid-1",
-					X:        10,
-					Y:        10,
-					Height:   40,
-				}, nil)
-			},
+			mockFunc:   func() {},
 			statusCode: http.StatusBadRequest,
 		},
 	}
